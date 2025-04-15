@@ -3,9 +3,10 @@ const helmet = require("helmet");
 const cors = require("cors");
 const hpp = require("hpp");
 const morgan = require("morgan");
-const globalErrorController = require("./controllers/globalError.controller");
-const limiter = require("./middlewares/rateLimiter");
+const limiter = require("./middlewares/rateLimiter.middleware");
 const ApiError = require("./utils/apiError");
+const globalErrorController = require("./middlewares/globalErrorHandler.middleware");
+const userRouter = require("./routes/user.routes");
 
 const app = express();
 // Use helmet for setting security headers
@@ -40,6 +41,9 @@ app.use(
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
+
+// Mounting the application routes
+app.use("/api/v1/users", userRouter);
 
 // Handle all unimplemented routes
 app.use("/{*splat}", (req, res, next) => {

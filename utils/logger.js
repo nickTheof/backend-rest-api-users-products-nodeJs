@@ -27,7 +27,7 @@ const fileRotateTransport = new winston.transports.DailyRotateFile({
 });
 
 const mongodbProdLogsTransport = new winston.transports.MongoDB({
-  level: "warn",
+  level: "info",
   db: process.env.MONGODB_URI,
   collection: "production_server_logs",
   format: winston.format.combine(

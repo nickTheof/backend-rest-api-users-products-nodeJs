@@ -64,10 +64,22 @@ async function updateOneById(id, updatedUser) {
   return result;
 }
 
+async function findUserDetailsForJWT(username) {
+  const results = await User.findOne(
+    { username: username },
+    { username: 1, email: 1, password: 1, roles: 1 }
+  );
+  if (!results) {
+    throw new ApiError(`User with username ${username} was not found`, 400);
+  }
+  return results;
+}
+
 module.exports = {
   findAll,
   findOneById,
   createOne,
   deleteOneById,
   updateOneById,
+  findUserDetailsForJWT,
 };

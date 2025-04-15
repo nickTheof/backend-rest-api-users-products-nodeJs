@@ -7,6 +7,7 @@ const limiter = require("./middlewares/rateLimiter.middleware");
 const ApiError = require("./utils/apiError");
 const globalErrorController = require("./middlewares/globalErrorHandler.middleware");
 const userRouter = require("./routes/user.routes");
+const authRouter = require("./routes/auth.routes");
 
 const app = express();
 // Use helmet for setting security headers
@@ -44,6 +45,7 @@ if (process.env.NODE_ENV === "development") {
 
 // Mounting the application routes
 app.use("/api/v1/users", userRouter);
+app.use("/api/v1/auth", authRouter);
 
 // Handle all unimplemented routes
 app.use("/{*splat}", (req, res, next) => {

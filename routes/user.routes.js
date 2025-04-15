@@ -6,6 +6,10 @@ router
   .route("/")
   .get(userController.findAllUsers)
   .post(userController.createOne);
-router.route("/:id").get(userController.findOneUserById);
+router
+  .route("/:id")
+  .get(userController.findOneUserById)
+  .patch(userController.updateOneById)
+  .delete(userController.deleteOneById);
 
 module.exports = router;

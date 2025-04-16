@@ -12,11 +12,6 @@ async function isValidEmail(email) {
   return results === 0;
 }
 
-async function isValidUsername(username) {
-  const results = await User.countDocuments({ username: username });
-  return results === 0;
-}
-
 async function findAll() {
   const result = await User.find();
   return result;
@@ -32,8 +27,7 @@ async function findOneById(id) {
 
 async function createOne(user) {
   const validEmail = await isValidEmail(user.email);
-  const validUsername = await isValidUsername(user.username);
-  if (!validEmail || !validUsername) {
+  if (!validEmail) {
     throw new ApiError(`User already exists`, 400);
   }
   const newUser = new User(user);
@@ -64,13 +58,13 @@ async function updateOneById(id, updatedUser) {
   return result;
 }
 
-async function findUserDetailsForJWT(username) {
+async function findUserDetailsForJWT(email) {
   const results = await User.findOne(
-    { username: username },
-    { username: 1, email: 1, password: 1, roles: 1 }
+    { email: email },
+    { email: 1, password: 1, roles: 1 }
   );
   if (!results) {
-    throw new ApiError(`User with username ${username} was not found`, 400);
+    throw new ApiError(`User with email ${email} was not found`, 400);
   }
   return results;
 }

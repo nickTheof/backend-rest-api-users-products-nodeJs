@@ -47,18 +47,6 @@ let productSchema = new Schema({
 
 const userSchema = new Schema(
   {
-    username: {
-      type: String,
-      unique: true,
-      sparse: true,
-      trim: true,
-      validate: {
-        validator: function (v) {
-          return /^(?!.*?\s)[a-zA-Z0-9_#$@]{6,}$/.test(v);
-        },
-        message: (props) => `${props.value} is not a valid username`,
-      },
-    },
     firstname: {
       type: String,
     },
@@ -98,8 +86,8 @@ const userSchema = new Schema(
     },
     roles: {
       type: [String],
-      enum: ["admin", "super-user", "user"],
-      default: ["user"],
+      enum: ["ADMIN", "EDITOR", "READER"],
+      default: ["READER"],
     },
   },
   {

@@ -5,7 +5,6 @@ const secUtil = require("../utils/secUtil");
 
 function generateAccessToken(user) {
   const payload = {
-    username: user.username,
     email: user.email,
     roles: user.roles,
   };
@@ -33,13 +32,13 @@ function verifyAccessToken(token) {
   }
 }
 
-async function loginUser(username, password) {
-  const fetchedUser = await userService.findUserDetailsForJWT(username);
+async function loginUser(email, password) {
+  const fetchedUser = await userService.findUserDetailsForJWT(email);
   let isMatch = false;
   if (fetchedUser) {
     isMatch = await secUtil.comparePassword(password, fetchedUser.password);
   }
-  if (fetchedUser && fetchedUser.username === username && isMatch) {
+  if (fetchedUser && fetchedUser.email === email && isMatch) {
     let token = generateAccessToken(fetchedUser);
     return {
       status: true,

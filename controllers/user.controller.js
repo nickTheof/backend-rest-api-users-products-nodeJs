@@ -1,6 +1,7 @@
 const userService = require("../services/user.services");
 const secUtil = require("../utils/secUtil");
 const catchAsync = require("../utils/catchAsync");
+const ApiError = require("../utils/apiError");
 
 exports.findAllUsers = catchAsync(async (req, res, next) => {
   const result = await userService.findAll();
@@ -20,6 +21,7 @@ exports.findOneUserById = catchAsync(async (req, res, next) => {
 });
 
 exports.createOne = catchAsync(async (req, res, next) => {
+  if (!req.body.password) throw new ApiError("Password cannot be empty", 400);
   const hashedPassword = await secUtil.generateHashPassword(req.body.password);
   const user = { ...req.body, password: hashedPassword };
   const result = await userService.createOne(user);

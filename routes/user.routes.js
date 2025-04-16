@@ -1,6 +1,10 @@
 const express = require("express");
 const userController = require("../controllers/user.controller");
+const authMiddleware = require("../middlewares/auth.middleware");
 const router = express.Router();
+
+//All routes are protected by Authentication and Can be accessed only by admins
+router.use(authMiddleware.verifyToken, authMiddleware.verifyRoles("admin"));
 
 router
   .route("/")

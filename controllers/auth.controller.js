@@ -26,7 +26,6 @@ exports.googleLogin = catchAsync(async (req, res, next) => {
     return next(new ApiError("Authorization code is missing", 400));
   } else {
     let response = await authService.googleAuth(code);
-    console.log(response);
     if (response.status) {
       // if the user is not in the database, we will create one with info from the google account
       const isValidEmail = await userService.isValidEmail(response.user.email);

@@ -54,7 +54,6 @@ async function loginUser(email, password) {
 }
 
 async function googleAuth(code) {
-  console.log("Google Login");
   const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
   const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
   const REDIRECT_URI = process.env.REDIRECT_URI;

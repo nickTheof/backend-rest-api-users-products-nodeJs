@@ -49,3 +49,33 @@ exports.updateOneById = catchAsync(async (req, res, next) => {
     data: result,
   });
 });
+
+exports.signupLocalUser = catchAsync(async (req, res, next) => {
+  const email = req.body.email;
+  const password = req.body.password;
+  const confirmPassword = req.body.confirmPassword;
+  if (!email || !password || !confirmPassword) {
+    return next(
+      new ApiError(
+        "Invalid input. You should send email, password, and password confirmation"
+      ),
+      400
+    );
+  }
+  if (password !== confirmPassword) {
+    return next(
+      new ApiError(
+        "Invalid input. Password and password confirmation should be equal"
+      )
+    );
+  }
+  const hashedPassword = await secUtil.generateHashPassword(password);
+  const result = await userService.createOne({
+    email: email,
+    password: hashedPassword,
+  });
+  res.status(201).json({
+    status: "success",
+    data: result,
+  });
+});

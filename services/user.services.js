@@ -69,6 +69,23 @@ async function findUserDetailsForJWT(email) {
   return results;
 }
 
+async function createUserFromGoogle(user) {
+  const newUser = new User({
+    email: user.email,
+    firstname: user.given_name,
+    lastname: user.family_name,
+    googleId: user.sub,
+    authProvider: "google",
+    avatar: user.picture,
+  });
+  const result = await newUser.save();
+  logger.info(
+    "User from google info created successfully",
+    sanitizeUserForLog(result._doc)
+  );
+  return result;
+}
+
 module.exports = {
   findAll,
   findOneById,
@@ -76,4 +93,6 @@ module.exports = {
   deleteOneById,
   updateOneById,
   findUserDetailsForJWT,
+  isValidEmail,
+  createUserFromGoogle,
 };

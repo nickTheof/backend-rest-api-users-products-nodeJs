@@ -92,7 +92,6 @@ exports.signupLocalUser = catchAsync(async (req, res, next) => {
 });
 
 // Update firstname, lastname, email, address, phone, avatar
-// TODO allowed fields to sanitize body
 exports.updateUserDetails = catchAsync(async (req, res, next) => {
   const detailsToUpdate = filterObj(
     req.body,
@@ -110,5 +109,15 @@ exports.updateUserDetails = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: "success",
     data: userUpdated,
+  });
+});
+
+exports.deleteSoftUser = catchAsync(async (req, res, next) => {
+  const updatedUser = await userService.updateOneById(req.user._id, {
+    isActive: false,
+  });
+  res.status(204).json({
+    status: "success",
+    data: updatedUser,
   });
 });

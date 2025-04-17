@@ -41,7 +41,7 @@ async function createOne(user) {
 async function deleteOneById(id) {
   const user = await User.findByIdAndDelete(id);
   if (!user) throw new ApiError(`User with id ${id} was not found`, 404);
-  logger.info("User deleted", sanitizeUser(user));
+  logger.info("User deleted", sanitizeUserForLog(user._doc));
   return user;
 }
 
@@ -51,14 +51,14 @@ async function updateOneById(id, updateData) {
     runValidators: true,
   });
   if (!user) throw new ApiError(`User with id ${id} was not found`, 404);
-  logger.info("User updated", sanitizeUser(user));
+  logger.info("User updated", sanitizeUserForLog(user._doc));
   return user;
 }
 
 async function findUserDetailsForJWT(email) {
   const user = await User.findOne(
     { email: email },
-    { _id: 1, email: 1, password: 1, roles: 1 }
+    { _id: 1, email: 1, password: 1, roles: 1, isActive: 1 }
   );
   if (!user) {
     throw new ApiError(`User with email ${email} was not found`, 404);

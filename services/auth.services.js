@@ -37,10 +37,15 @@ function verifyAccessToken(token) {
 async function loginUser(email, password) {
   const fetchedUser = await userService.findUserDetailsForJWT(email);
   let isMatch = false;
-  if (fetchedUser) {
+  if (fetchedUser && fetchedUser.isActive) {
     isMatch = await secUtil.comparePassword(password, fetchedUser.password);
   }
-  if (fetchedUser && fetchedUser.email === email && isMatch) {
+  if (
+    fetchedUser &&
+    fetchedUser.isActive &&
+    fetchedUser.email === email &&
+    isMatch
+  ) {
     let token = generateAccessToken(fetchedUser);
     return {
       status: true,

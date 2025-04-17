@@ -9,6 +9,12 @@ router.get(
   userController.findLoggedInUserDetails
 );
 
+router.delete(
+  "/deleteMe",
+  authMiddleware.verifyToken,
+  userController.deleteSoftUser
+);
+
 router.patch(
   "/updateMe",
   authMiddleware.verifyToken,

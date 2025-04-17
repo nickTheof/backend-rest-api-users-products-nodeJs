@@ -28,14 +28,16 @@ exports.googleLogin = catchAsync(async (req, res, next) => {
     let response = await authService.googleAuth(code);
     if (response.status) {
       // if the user is not in the database, we will create one with info from the google account
-      const isValidEmail = await userService.isValidEmail(response.user.email);
-      if (isValidEmail) {
+      if (await userService.isValidEmail(response.user.email)) {
         await userService.createUserFromGoogle(response.user);
       }
       // Sign a JWT token and send it
       const userDetailsForToken = await userService.findUserDetailsForJWT(
         response.user.email
       );
+      if (!userDetailsForToken.isActive) {
+        return next(new ApiError("Unauthorized. User is inactive.", 401));
+      }
       const token = authService.generateAccessToken(userDetailsForToken);
       res.status(200).json({
         status: "success",

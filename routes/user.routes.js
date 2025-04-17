@@ -3,6 +3,12 @@ const userController = require("../controllers/user.controller");
 const authMiddleware = require("../middlewares/auth.middleware");
 const router = express.Router();
 
+router.patch(
+  "/updateMe",
+  authMiddleware.verifyToken,
+  userController.updateUserDetails
+);
+
 //All routes are protected by Authentication and Can be accessed only by admins
 router.use(authMiddleware.verifyToken, authMiddleware.verifyRoles("ADMIN"));
 

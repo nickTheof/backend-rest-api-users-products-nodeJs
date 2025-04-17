@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const app = require("./app");
 const logger = require("./utils/logger");
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 3000;
 
 mongoose.connect(process.env.MONGODB_URI).then(
   () => {
@@ -12,7 +12,7 @@ mongoose.connect(process.env.MONGODB_URI).then(
       logger.info(`Server is up and running on port ${PORT}...`);
     });
   },
-  () => {
-    logger.error("Mongo DB Connection failed");
+  (err) => {
+    logger.error("Mongo DB Connection failed", err.message);
   }
 );

@@ -18,18 +18,20 @@ async function findAll() {
 }
 
 async function findOneById(id) {
-  const results = await User.find({ _id: id });
-  if (results.length === 0) {
-    throw new ApiError(`User with id ${id} was not found`, 400);
-  }
-  return results[0];
+  const user = await User.findById(id);
+  if (!user) throw new ApiError(`User with id ${id} was not found`, 404);
+  return user;
+}
+
+async function findOneByEmail(email) {
+  const user = await User.findOne({ email: email });
+  if (!user) throw new ApiError(`User with email ${email} was not found`, 404);
+  return user;
 }
 
 async function createOne(user) {
-  const validEmail = await isValidEmail(user.email);
-  if (!validEmail) {
+  if (!(await isValidEmail(user.email)))
     throw new ApiError(`User already exists`, 400);
-  }
   const newUser = new User(user);
   const result = await newUser.save();
   logger.info("User created successfully", sanitizeUserForLog(result._doc));
@@ -37,36 +39,31 @@ async function createOne(user) {
 }
 
 async function deleteOneById(id) {
-  const result = await User.findByIdAndDelete(id);
-  if (!result) {
-    throw new ApiError(`User with id ${id} was not found`, 400);
-  }
-  logger.info("User deleted successfully", sanitizeUserForLog(result._doc));
-  return result;
+  const user = await User.findByIdAndDelete(id);
+  if (!user) throw new ApiError(`User with id ${id} was not found`, 404);
+  logger.info("User deleted", sanitizeUser(user));
+  return user;
 }
 
-async function updateOneById(id, updatedUser) {
-  const result = await User.findOneAndUpdate(
-    { _id: id },
-    { $set: updatedUser },
-    { runValidators: true, new: true }
-  );
-  if (!result) {
-    throw new ApiError(`User with id ${id} was not found`, 400);
-  }
-  logger.info("User updated successfully", sanitizeUserForLog(result._doc));
-  return result;
+async function updateOneById(id, updateData) {
+  const user = await User.findByIdAndUpdate(id, updateData, {
+    new: true,
+    runValidators: true,
+  });
+  if (!user) throw new ApiError(`User with id ${id} was not found`, 404);
+  logger.info("User updated", sanitizeUser(user));
+  return user;
 }
 
 async function findUserDetailsForJWT(email) {
-  const results = await User.findOne(
+  const user = await User.findOne(
     { email: email },
-    { email: 1, password: 1, roles: 1 }
+    { _id: 1, email: 1, password: 1, roles: 1 }
   );
-  if (!results) {
-    throw new ApiError(`User with email ${email} was not found`, 400);
+  if (!user) {
+    throw new ApiError(`User with email ${email} was not found`, 404);
   }
-  return results;
+  return user;
 }
 
 async function createUserFromGoogle(user) {
@@ -86,13 +83,30 @@ async function createUserFromGoogle(user) {
   return result;
 }
 
+async function updateDetailsUser(user, updatedDetails) {
+  if (
+    updatedDetails.email &&
+    user.email !== updatedDetails.email &&
+    !(await isValidEmail(updatedDetails.email))
+  ) {
+    throw new ApiError("Invalid email input", 400);
+  }
+  const updatedUser = await User.findByIdAndUpdate(user._id, updatedDetails, {
+    new: true,
+    runValidators: true,
+  });
+  return updatedUser;
+}
+
 module.exports = {
   findAll,
   findOneById,
+  findOneByEmail,
   createOne,
   deleteOneById,
   updateOneById,
   findUserDetailsForJWT,
   isValidEmail,
   createUserFromGoogle,
+  updateDetailsUser,
 };

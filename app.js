@@ -18,18 +18,20 @@ app.use(
 );
 
 // Configure the allowed origins for this backend API
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS.split(",") || [];
 app.use(
   cors({
-    origin: ["http:127.0.0.1:5173"],
+    origin: ALLOWED_ORIGINS,
     credentials: true,
   })
 );
 
-// Rate limiter Middleware to limit repeated requests to our exposed endpoints
+// Rate limiter Middleware to limit repeated requests to our exposed endpoints. We will exclude from rate limiting the checkpoint for checking the status of the server
 app.use("/", limiter);
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Body parser with size limits
+app.use(express.json({ limit: "10kb" }));
+app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 
 // Middleware to protect against HTTP Parameter Pollution attacks
 app.use(
@@ -43,12 +45,17 @@ if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
 
+// Health check endpoint
+app.get("/api/v1/health", (req, res) => {
+  res.status(200).json({ status: "healthy" });
+});
+
 // Mounting the application routes
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/auth", authRouter);
 
 // Handle all unimplemented routes
-app.use("/{*splat}", (req, res, next) => {
+app.all("/{*splat}", (req, res, next) => {
   next(new ApiError(`Can't find the ${req.originalUrl} on the server`, 404));
 });
 // Global Error Middleware

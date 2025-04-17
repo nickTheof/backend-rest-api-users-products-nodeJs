@@ -5,7 +5,7 @@ const userController = require("../controllers/user.controller");
 const router = express.Router();
 
 router.post("/login", authController.login);
-router.post("/signup", userController.signupLocalUser);
+router.post("/register", userController.signupLocalUser);
 router.get("/google/callback", authController.googleLogin);
 
 module.exports = router;

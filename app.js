@@ -8,6 +8,7 @@ const ApiError = require("./utils/apiError");
 const globalErrorController = require("./middlewares/globalErrorHandler.middleware");
 const userRouter = require("./routes/user.routes");
 const authRouter = require("./routes/auth.routes");
+const productsRouter = require("./routes/products.routes");
 
 const app = express();
 // Use helmet for setting security headers
@@ -53,6 +54,7 @@ app.get("/api/v1/health", (req, res) => {
 // Mounting the application routes
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/products", productsRouter);
 
 // Handle all unimplemented routes
 app.all("/{*splat}", (req, res, next) => {

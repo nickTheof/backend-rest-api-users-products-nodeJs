@@ -61,6 +61,7 @@ const userSchema = new Schema(
     },
     password: {
       type: String,
+      select: false,
     },
     address: addressSchema,
     phone: {
@@ -88,6 +89,10 @@ const userSchema = new Schema(
       type: [String],
       enum: ["ADMIN", "EDITOR", "READER"],
       default: ["READER"],
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
     },
   },
   {

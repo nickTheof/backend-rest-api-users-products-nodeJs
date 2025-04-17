@@ -21,6 +21,15 @@ exports.findOneUserById = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.findLoggedInUserDetails = catchAsync(async (req, res, next) => {
+  const id = req.user._id;
+  const result = await userService.findOneById(id);
+  res.status(200).json({
+    status: "success",
+    data: result,
+  });
+});
+
 exports.createOne = catchAsync(async (req, res, next) => {
   if (!req.body.password)
     return next(new ApiError("Password cannot be empty", 400));

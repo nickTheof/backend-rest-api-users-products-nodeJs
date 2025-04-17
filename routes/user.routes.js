@@ -3,6 +3,12 @@ const userController = require("../controllers/user.controller");
 const authMiddleware = require("../middlewares/auth.middleware");
 const router = express.Router();
 
+router.get(
+  "/me",
+  authMiddleware.verifyToken,
+  userController.findLoggedInUserDetails
+);
+
 router.patch(
   "/updateMe",
   authMiddleware.verifyToken,

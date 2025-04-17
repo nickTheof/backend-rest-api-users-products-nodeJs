@@ -3,26 +3,16 @@ const userController = require("../controllers/user.controller");
 const authMiddleware = require("../middlewares/auth.middleware");
 const router = express.Router();
 
-router.get(
-  "/me",
-  authMiddleware.verifyToken,
-  userController.findLoggedInUserDetails
-);
+//All below routes are protected by Authentication
+router.use(authMiddleware.verifyToken);
 
-router.delete(
-  "/deleteMe",
-  authMiddleware.verifyToken,
-  userController.deleteSoftUser
-);
+router.get("/me", userController.findLoggedInUserDetails);
+router.delete("/deleteMe", userController.deleteSoftUser);
+router.patch("/updateMe", userController.updateUserDetails);
+router.patch("/updateMyPassword", userController.updatePassword);
 
-router.patch(
-  "/updateMe",
-  authMiddleware.verifyToken,
-  userController.updateUserDetails
-);
-
-//All routes are protected by Authentication and Can be accessed only by admins
-router.use(authMiddleware.verifyToken, authMiddleware.verifyRoles("ADMIN"));
+//All below routes are protected by Authentication and Can be accessed only by admins
+router.use(authMiddleware.verifyRoles("ADMIN"));
 
 router
   .route("/")

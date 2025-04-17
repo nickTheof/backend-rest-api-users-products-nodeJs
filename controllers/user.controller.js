@@ -121,3 +121,47 @@ exports.deleteSoftUser = catchAsync(async (req, res, next) => {
     data: updatedUser,
   });
 });
+
+exports.updatePassword = catchAsync(async (req, res, next) => {
+  const currentPassword = req.body.currentPassword;
+  const newPassword = req.body.newPassword;
+  const newPasswordConfirm = req.body.newPasswordConfirm;
+  if (!currentPassword || !newPassword || !newPasswordConfirm) {
+    return next(
+      new ApiError(
+        "You should provide current password, new password and new password confirm",
+        400
+      )
+    );
+  }
+  if (newPassword !== newPasswordConfirm) {
+    return next(
+      new ApiError(
+        "New password and new password confirm must be the same",
+        400
+      )
+    );
+  }
+  const currentUser = await userService.findUserByIdIncludingPassword(
+    req.user._id
+  );
+  if (currentUser.authProvider === "google") {
+    return next(
+      new ApiError(
+        "You use a google account for login. You cannot change your password from this route",
+        400
+      )
+    );
+  }
+  if (!(await secUtil.comparePassword(currentPassword, currentUser.password))) {
+    return next(new ApiError("Unauthorized! Wrong current password", 401));
+  }
+  const hashedPassword = await secUtil.generateHashPassword(newPassword);
+  const updatedUser = await userService.updateOneById(currentUser._id, {
+    password: hashedPassword,
+  });
+  res.status(200).json({
+    status: "success",
+    data: updatedUser,
+  });
+});

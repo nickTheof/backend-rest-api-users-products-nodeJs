@@ -66,6 +66,12 @@ async function findUserDetailsForJWT(email) {
   return user;
 }
 
+async function findUserByIdIncludingPassword(id) {
+  const user = await User.findById(id).select("+password");
+  if (!user) throw new ApiError(`User with id ${id} was not found`, 404);
+  return user;
+}
+
 async function createUserFromGoogle(user) {
   const newUser = new User({
     email: user.email,
@@ -106,6 +112,7 @@ module.exports = {
   deleteOneById,
   updateOneById,
   findUserDetailsForJWT,
+  findUserByIdIncludingPassword,
   isValidEmail,
   createUserFromGoogle,
   updateDetailsUser,

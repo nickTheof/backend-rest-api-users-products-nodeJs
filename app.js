@@ -3,6 +3,7 @@ const helmet = require("helmet");
 const cors = require("cors");
 const hpp = require("hpp");
 const morgan = require("morgan");
+const swaggerUI = require("swagger-ui-express");
 const limiter = require("./middlewares/rateLimiter.middleware");
 const ApiError = require("./utils/apiError");
 const globalErrorController = require("./middlewares/globalErrorHandler.middleware");
@@ -10,6 +11,7 @@ const userRouter = require("./routes/user.routes");
 const authRouter = require("./routes/auth.routes");
 const productsRouter = require("./routes/products.routes");
 const userProductsRouter = require("./routes/user.products.routes");
+const swaggerDoc = require("./swagger");
 
 const app = express();
 // Use helmet for setting security headers
@@ -57,6 +59,7 @@ app.use("/api/v1/users", userRouter);
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/products", productsRouter);
 app.use("/api/v1/user-products", userProductsRouter);
+app.use("/api/v1/docs", swaggerUI.serve, swaggerUI.setup(swaggerDoc.options));
 
 // Handle all unimplemented routes
 app.all("/{*splat}", (req, res, next) => {

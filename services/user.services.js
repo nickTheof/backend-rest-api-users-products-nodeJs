@@ -61,7 +61,7 @@ async function findUserDetailsForJWT(email) {
     { _id: 1, email: 1, password: 1, roles: 1, isActive: 1 }
   );
   if (!user) {
-    throw new ApiError(`User with email ${email} was not found`, 404);
+    throw new ApiError(`Invalid login credentials`, 400);
   }
   return user;
 }

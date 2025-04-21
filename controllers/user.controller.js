@@ -116,7 +116,7 @@ exports.deleteSoftUser = catchAsync(async (req, res, next) => {
   const updatedUser = await userService.updateOneById(req.user._id, {
     isActive: false,
   });
-  res.status(204).json({
+  res.status(200).json({
     status: "success",
     data: updatedUser,
   });

@@ -12,7 +12,7 @@ router
   .patch(userController.updateUserDetails)
   .delete(userController.deleteSoftUser);
 
-router.patch("/change-password", userController.updatePassword);
+router.patch("/me/change-password", userController.updatePassword);
 
 //All below routes are protected by Authentication and Can be accessed only by admins
 router.use(authMiddleware.verifyRoles("ADMIN"));

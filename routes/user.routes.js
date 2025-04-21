@@ -6,10 +6,13 @@ const router = express.Router();
 //All below routes are protected by Authentication
 router.use(authMiddleware.verifyToken);
 
-router.get("/me", userController.findLoggedInUserDetails);
-router.delete("/deleteMe", userController.deleteSoftUser);
-router.patch("/updateMe", userController.updateUserDetails);
-router.patch("/updateMyPassword", userController.updatePassword);
+router
+  .route("/me")
+  .get(userController.findLoggedInUserDetails)
+  .patch(userController.updateUserDetails)
+  .delete(userController.deleteSoftUser);
+
+router.patch("/change-password", userController.updatePassword);
 
 //All below routes are protected by Authentication and Can be accessed only by admins
 router.use(authMiddleware.verifyRoles("ADMIN"));

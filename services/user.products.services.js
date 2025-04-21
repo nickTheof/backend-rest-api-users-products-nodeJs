@@ -3,7 +3,7 @@ const User = require("../models/user.model");
 const ApiError = require("../utils/apiError");
 
 async function findAll() {
-  const result = await User.find({}, { _id: 1, username: 1, products: 1 });
+  const result = await User.find({}, { _id: 1, email: 1, products: 1 });
   return result;
 }
 
@@ -59,6 +59,8 @@ async function insertNewProductToAUser(id, products) {
     },
     { new: true }
   );
+  if (!result)
+    throw new ApiError("User not found to insert a new product", 404);
   logger.info("New product inserted to user", result._doc);
   return result;
 }

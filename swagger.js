@@ -1,6 +1,7 @@
 const m2s = require("mongoose-to-swagger");
 const User = require("./models/user.model");
 const Product = require("./models/product.model");
+const { format } = require("morgan");
 
 exports.options = {
   openapi: "3.1.0",
@@ -1261,6 +1262,701 @@ exports.options = {
                 example: {
                   status: "fail",
                   message: "Product with id 15151515 was not found",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    "/api/v1/user-products/me": {
+      get: {
+        tags: ["Users and Products"],
+        summary: "Get all products of a current authenticated user",
+        description: "Returns a list of all products of a logged in user",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description:
+              "Get all products from a current authenticated user's product list",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    status: { type: "string", example: "success" },
+                    data: {
+                      type: "object",
+                      properties: {
+                        _id: { type: "string" },
+                        products: {
+                          type: "array",
+                          items: {
+                            type: "object",
+                            properties: {
+                              _id: { type: "string" },
+                              product: { type: "string" },
+                              cost: { type: "number" },
+                              quantity: { type: "number" },
+                              date: { type: "date", format: "date-time" },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          401: {
+            description: "Access restriction to not authenticated users",
+            content: {
+              "application/json": {
+                example: {
+                  status: "fail",
+                  message: "Access denied. No token provided",
+                },
+              },
+            },
+          },
+        },
+      },
+      post: {
+        tags: ["Users and Products"],
+        summary: "Insert a product in the current authenticated user",
+        description:
+          "Push a new product to the list of the products of the logged in user",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          description:
+            "JSON Data with the products to insert in the user's product list",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["products"],
+                properties: {
+                  products: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        product: { type: "string" },
+                        quantity: { type: "number" },
+                        cost: { type: "number" },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Get the user with the updated products list",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    status: {
+                      type: "string",
+                      example: "success",
+                    },
+                    data: {
+                      $ref: "#/components/schemas/User",
+                    },
+                  },
+                },
+              },
+            },
+          },
+          401: {
+            description: "Access restriction to not authenticated users",
+            content: {
+              "application/json": {
+                example: {
+                  status: "fail",
+                  message: "Access denied. No token provided",
+                },
+              },
+            },
+          },
+        },
+      },
+      patch: {
+        tags: ["Users and Products"],
+        summary:
+          "Update a Product quantity of a specific product id of the current authenticated user",
+        description:
+          "Change the quantity of a specific product of the logged in user",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          description:
+            "JSON data with the product id and the quantity to update",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  productId: { type: "string" },
+                  quantity: { type: "number" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Get the user with the updated products list",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    status: {
+                      type: "string",
+                      example: "success",
+                    },
+                    data: {
+                      $ref: "#/components/schemas/User",
+                    },
+                  },
+                },
+              },
+            },
+          },
+          404: {
+            description: "Product id not found",
+            content: {
+              "application/json": {
+                example: {
+                  status: "fail",
+                  message: "Product not found",
+                },
+              },
+            },
+          },
+          401: {
+            description: "Access restriction to not authenticated users",
+            content: {
+              "application/json": {
+                example: {
+                  status: "fail",
+                  message: "Access denied. No token provided",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    "/api/v1/user-products/stats/user-purchasing-stats": {
+      get: {
+        tags: ["Users and Products"],
+        summary:
+          "Get the statistics of all products in the users list. Admin action",
+        description:
+          "Return specific statistics of all products in the users list",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: "Get all products from a specific user's product list",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    status: { type: "string", example: "success" },
+                    data: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          _id: {
+                            type: "object",
+                            properties: {
+                              email: { type: "string" },
+                              product: { type: "string" },
+                            },
+                          },
+                          total_amount: { type: "number" },
+                          count: { type: "number" },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          401: {
+            description: "Access restriction to not authenticated users",
+            content: {
+              "application/json": {
+                example: {
+                  status: "fail",
+                  message: "Access denied. No token provided",
+                },
+              },
+            },
+          },
+          403: {
+            description: "Access restriction to not admin authenticated users",
+            content: {
+              "application/json": {
+                example: {
+                  status: "fail",
+                  message: "Forbidden: insufficient permissions",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    "/api/v1/user-products": {
+      get: {
+        tags: ["Users and Products"],
+        summary: "Get all products of the users list. Admin or Editor Action",
+        description: "Return a list of all products in the users collection",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: "Get all products from a specific user's product list",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    status: { type: "string", example: "success" },
+                    data: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          _id: { type: "string" },
+                          email: { type: "string" },
+                          products: {
+                            type: "array",
+                            items: {
+                              type: "object",
+                              properties: {
+                                product: { type: "string" },
+                                cost: { type: "number" },
+                                quantity: { type: "number" },
+                                date: { type: "date", format: "date-time" },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          401: {
+            description: "Access restriction to not authenticated users",
+            content: {
+              "application/json": {
+                example: {
+                  status: "fail",
+                  message: "Access denied. No token provided",
+                },
+              },
+            },
+          },
+          403: {
+            description: "Access restriction to not admin authenticated users",
+            content: {
+              "application/json": {
+                example: {
+                  status: "fail",
+                  message: "Forbidden: insufficient permissions",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    "/api/v1/user-products/{userId}": {
+      get: {
+        tags: ["Users and Products"],
+        summary:
+          "Get all products of a specific user by user id. Admin or Editor action",
+        description: "Returns a list with all products of a specific user.",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "userId",
+            in: "path",
+            description: "The user id of the specific user",
+            required: "true",
+            schema: {
+              type: "string",
+            },
+          },
+        ],
+        responses: {
+          200: {
+            description: "Get all products from a specific user's product list",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      product: { type: "string" },
+                      cost: { type: "number" },
+                      quantity: { type: "number" },
+                      date: { type: "date", format: "date-time" },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          404: {
+            description: "User id not found",
+            content: {
+              "application/json": {
+                example: {
+                  status: "fail",
+                  message: "User not found",
+                },
+              },
+            },
+          },
+          400: {
+            description: "Invalid id",
+            content: {
+              "application/json": {
+                example: {
+                  status: "fail",
+                  message: "Invalid id",
+                },
+              },
+            },
+          },
+          401: {
+            description: "Access restriction to not authenticated users",
+            content: {
+              "application/json": {
+                example: {
+                  status: "fail",
+                  message: "Access denied. No token provided",
+                },
+              },
+            },
+          },
+          403: {
+            description: "Access restriction to not admin authenticated users",
+            content: {
+              "application/json": {
+                example: {
+                  status: "fail",
+                  message: "Forbidden: insufficient permissions",
+                },
+              },
+            },
+          },
+        },
+      },
+      post: {
+        tags: ["Users and Products"],
+        summary: "Insert a product in a specific user by his id. Admin action",
+        description:
+          "Push products to the list of the products of a specific user",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "userId",
+            in: "path",
+            description: "The user id of the specific user",
+            required: "true",
+            schema: {
+              type: "string",
+            },
+          },
+        ],
+        requestBody: {
+          required: true,
+          description:
+            "JSON Data with the products to insert in the user's product list",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["products"],
+                properties: {
+                  products: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        product: { type: "string" },
+                        quantity: { type: "number" },
+                        cost: { type: "number" },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Get the user with the updated products list",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    status: {
+                      type: "string",
+                      example: "success",
+                    },
+                    data: {
+                      $ref: "#/components/schemas/User",
+                    },
+                  },
+                },
+              },
+            },
+          },
+          404: {
+            description: "User id not found",
+            content: {
+              "application/json": {
+                example: {
+                  status: "fail",
+                  message: "User not found",
+                },
+              },
+            },
+          },
+          400: {
+            description: "Invalid id",
+            content: {
+              "application/json": {
+                example: {
+                  status: "fail",
+                  message: "Invalid id",
+                },
+              },
+            },
+          },
+          401: {
+            description: "Access restriction to not authenticated users",
+            content: {
+              "application/json": {
+                example: {
+                  status: "fail",
+                  message: "Access denied. No token provided",
+                },
+              },
+            },
+          },
+          403: {
+            description: "Access restriction to not admin authenticated users",
+            content: {
+              "application/json": {
+                example: {
+                  status: "fail",
+                  message: "Forbidden: insufficient permissions",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    "/api/v1/user-products/{userId}/products/{productId}": {
+      patch: {
+        tags: ["Users and Products"],
+        summary:
+          "Update the quantity of a specific product of a specific user. Admin action",
+        description:
+          "Change the quantity of a specific product of a specific user by product and user id",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "userId",
+            in: "path",
+            description: "The user id of the specific user",
+            required: "true",
+            schema: {
+              type: "string",
+            },
+          },
+          {
+            name: "productId",
+            in: "path",
+            description:
+              "The product id of the specific product in the user's product list",
+            required: "true",
+            schema: {
+              type: "string",
+            },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  quantity: {
+                    type: "number",
+                    example: 5,
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description:
+              "Successful update of the quantity of a product from the user's product list",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    status: {
+                      type: "string",
+                      example: "success",
+                    },
+                    data: {
+                      $ref: "#/components/schemas/User",
+                    },
+                  },
+                },
+              },
+            },
+          },
+          404: {
+            description: "Invalid user or product id",
+            content: {
+              "application/json": {
+                example: {
+                  status: "fail",
+                  message: "User or product not found",
+                },
+              },
+            },
+          },
+          401: {
+            description: "Access restriction to not authenticated users",
+            content: {
+              "application/json": {
+                example: {
+                  status: "fail",
+                  message: "Access denied. No token provided",
+                },
+              },
+            },
+          },
+          403: {
+            description: "Access restriction to not admin authenticated users",
+            content: {
+              "application/json": {
+                example: {
+                  status: "fail",
+                  message: "Forbidden: insufficient permissions",
+                },
+              },
+            },
+          },
+        },
+      },
+      delete: {
+        tags: ["Users and Products"],
+        summary: "Delete a specific product of a specific user. Admin action",
+        description: "Remove a product from a user's product list",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "userId",
+            in: "path",
+            description: "The user id of the specific user",
+            required: "true",
+            schema: {
+              type: "string",
+            },
+          },
+          {
+            name: "productId",
+            in: "path",
+            description:
+              "The product id of the specific product in the user's product list",
+            required: "true",
+            schema: {
+              type: "string",
+            },
+          },
+        ],
+        responses: {
+          200: {
+            description:
+              "Successful delete of a product from the user's product list",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    status: {
+                      type: "string",
+                      example: "success",
+                    },
+                    data: {
+                      $ref: "#/components/schemas/User",
+                    },
+                  },
+                },
+              },
+            },
+          },
+          404: {
+            description: "Invalid user or product id",
+            content: {
+              "application/json": {
+                example: {
+                  status: "fail",
+                  message: "User or product not found",
+                },
+              },
+            },
+          },
+          401: {
+            description: "Access restriction to not authenticated users",
+            content: {
+              "application/json": {
+                example: {
+                  status: "fail",
+                  message: "Access denied. No token provided",
+                },
+              },
+            },
+          },
+          403: {
+            description: "Access restriction to not admin authenticated users",
+            content: {
+              "application/json": {
+                example: {
+                  status: "fail",
+                  message: "Forbidden: insufficient permissions",
                 },
               },
             },

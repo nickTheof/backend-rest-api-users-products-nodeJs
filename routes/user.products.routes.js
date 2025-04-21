@@ -7,7 +7,7 @@ const router = express.Router();
 router.use(authMiddleware.verifyToken);
 
 router
-  .route("/myProducts")
+  .route("/me")
   .get(userProductsController.findAllMyProducts)
   .post(userProductsController.createProducts)
   .patch(userProductsController.updateMyQuantityOfProduct);

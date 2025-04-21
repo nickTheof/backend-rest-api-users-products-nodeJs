@@ -842,7 +842,7 @@ exports.options = {
         responses: {
           200: {
             description:
-              "JSON response for a successful password of the current authneticated user",
+              "JSON response for a successful password of the current authenticated user",
             content: {
               "application/json": {
                 schema: {
@@ -879,6 +879,388 @@ exports.options = {
                 example: {
                   status: "fail",
                   message: "Access denied. No token provided",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    "/api/v1/products": {
+      get: {
+        tags: ["Products"],
+        summary: "Get all products in a list",
+        description: "Return a list with the products",
+        responses: {
+          200: {
+            description: "List of all products",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "array",
+                  items: {
+                    $ref: "#/components/schemas/Product",
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      post: {
+        tags: ["Products"],
+        summary: "Create a new Product. Admin and Editor Action",
+        description:
+          "Returns a new successfully created product. Require an authenticated user with admin or editor role",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          description: "JSON data with product data",
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["product", "cost", "category"],
+                properties: {
+                  product: { type: "string", example: "Product 1" },
+                  description: {
+                    type: "string",
+                    example: "Product 1 description",
+                  },
+                  cost: { type: "number", example: 3.5 },
+                  quantity: { type: "number", example: 2 },
+                  category: {
+                    type: "array",
+                    items: {
+                      type: "string",
+                      enum: [
+                        "electronics",
+                        "clothing",
+                        "home",
+                        "beauty",
+                        "toys",
+                        "sports",
+                        "books",
+                        "food",
+                      ],
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: {
+            description:
+              "JSON response of a succcessfully creation of a new product",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    status: {
+                      type: "string",
+                      example: "success",
+                    },
+                    data: {
+                      $ref: "#/components/schemas/Product",
+                    },
+                  },
+                },
+              },
+            },
+          },
+          400: {
+            description: "Invalid request body data",
+            content: {
+              "application/json": {
+                example: {
+                  status: "fail",
+                  message: "Invalid input data",
+                },
+              },
+            },
+          },
+          401: {
+            description: "Access restriction to not authenticated users",
+            content: {
+              "application/json": {
+                example: {
+                  status: "fail",
+                  message: "Access denied. No token provided",
+                },
+              },
+            },
+          },
+          403: {
+            description:
+              "Access restriction to authenticated users with only READER role",
+            content: {
+              "application/json": {
+                example: {
+                  status: "fail",
+                  message: "Forbidden: insufficient permissions",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    "/api/v1/products/{id}": {
+      get: {
+        tags: ["Products"],
+        summary: "Get Product details by product id",
+        description: "Return product details for a specific product id",
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            description: "ID of the of the product to fetch",
+            schema: { type: "string" },
+          },
+        ],
+        responses: {
+          200: {
+            description: "JSON response of a succcessfully fetch of a product",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    status: {
+                      type: "string",
+                      example: "success",
+                    },
+                    data: {
+                      $ref: "#/components/schemas/Product",
+                    },
+                  },
+                },
+              },
+            },
+          },
+          400: {
+            description: "Invalid product id",
+            content: {
+              "application/json": {
+                example: {
+                  status: "fail",
+                  message: "Invalid ID",
+                },
+              },
+            },
+          },
+          404: {
+            description: "Invalid ID. Product not found to update",
+            content: {
+              "application/json": {
+                example: {
+                  status: "fail",
+                  message: "Product with id 15151515 was not found",
+                },
+              },
+            },
+          },
+        },
+      },
+      patch: {
+        tags: ["Products"],
+        summary:
+          "Update product with a specific product id. Admin or Editor Action",
+        description: "Update product with a specific product id",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            description: "ID of the of the product to update",
+            schema: { type: "string" },
+          },
+        ],
+        requestBody: {
+          description: "JSON data with product data to update",
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["quantity"],
+                properties: {
+                  product: { type: "string", example: "Product 1" },
+                  description: {
+                    type: "string",
+                    example: "Product 1 description",
+                  },
+                  cost: { type: "number", example: 3.5 },
+                  quantity: { type: "number", example: 2 },
+                  category: {
+                    type: "array",
+                    items: {
+                      type: "string",
+                      enum: [
+                        "electronics",
+                        "clothing",
+                        "home",
+                        "beauty",
+                        "toys",
+                        "sports",
+                        "books",
+                        "food",
+                      ],
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "JSON response of a succcessfully update of a product",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    status: {
+                      type: "string",
+                      example: "success",
+                    },
+                    data: {
+                      $ref: "#/components/schemas/Product",
+                    },
+                  },
+                },
+              },
+            },
+          },
+          400: {
+            description: "Invalid product id",
+            content: {
+              "application/json": {
+                example: {
+                  status: "fail",
+                  message: "Invalid Id",
+                },
+              },
+            },
+          },
+          401: {
+            description: "Access restriction to not authenticated users",
+            content: {
+              "application/json": {
+                example: {
+                  status: "fail",
+                  message: "Access denied. No token provided",
+                },
+              },
+            },
+          },
+          403: {
+            description:
+              "Access restriction to authenticated users with only READER role",
+            content: {
+              "application/json": {
+                example: {
+                  status: "fail",
+                  message: "Forbidden: insufficient permissions",
+                },
+              },
+            },
+          },
+          404: {
+            description: "Invalid ID. Product not found to update",
+            content: {
+              "application/json": {
+                example: {
+                  status: "fail",
+                  message: "Product with id 15151515 was not found",
+                },
+              },
+            },
+          },
+        },
+      },
+      delete: {
+        tags: ["Products"],
+        summary:
+          "Delete product with a specific product id. Admin or Editor Action",
+        description: "Delete product with a specific product id",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            description: "ID of the of the product to delete",
+            schema: { type: "string" },
+          },
+        ],
+        responses: {
+          200: {
+            description: "JSON response of a succcessfully fetch of a product",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    status: {
+                      type: "string",
+                      example: "success",
+                    },
+                    data: {
+                      $ref: "#/components/schemas/Product",
+                    },
+                  },
+                },
+              },
+            },
+          },
+          400: {
+            description: "Invalid product id",
+            content: {
+              "application/json": {
+                example: {
+                  status: "fail",
+                  message: "Invalid ID",
+                },
+              },
+            },
+          },
+          401: {
+            description: "Access restriction to not authenticated users",
+            content: {
+              "application/json": {
+                example: {
+                  status: "fail",
+                  message: "Access denied. No token provided",
+                },
+              },
+            },
+          },
+          403: {
+            description:
+              "Access restriction to authenticated users with only READER role",
+            content: {
+              "application/json": {
+                example: {
+                  status: "fail",
+                  message: "Forbidden: insufficient permissions",
+                },
+              },
+            },
+          },
+          404: {
+            description: "Invalid ID. Product not found to update",
+            content: {
+              "application/json": {
+                example: {
+                  status: "fail",
+                  message: "Product with id 15151515 was not found",
                 },
               },
             },

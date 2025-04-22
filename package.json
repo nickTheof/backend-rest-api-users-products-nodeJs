@@ -3,9 +3,19 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "SET NODE_ENV=production&& jest --detectOpenHandles --forceExit",
     "start": "SET NODE_ENV=production&& node server.js",
     "dev": "node --watch server.js"
+  },
+  "jest": {
+    "collectCoverage": true,
+    "coveragePathIgnorePatterns": [
+      "/node_modules/",
+      "/logs/"
+    ],
+    "setupFiles": [
+      "dotenv/config"
+    ]
   },
   "author": "",
   "license": "ISC",
@@ -28,5 +38,9 @@
     "winston": "^3.17.0",
     "winston-daily-rotate-file": "^5.0.0",
     "winston-mongodb": "^6.0.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^7.1.0"
   }
 }

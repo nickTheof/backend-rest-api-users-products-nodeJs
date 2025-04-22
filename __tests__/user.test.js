@@ -409,3 +409,221 @@ describe("DELETE /api/v1/users/{id}", () => {
     expect(res.body.message).toBe("Forbidden: insufficient permissions");
   }, 10000);
 });
+
+describe("GET /api/v1/users/me", () => {
+  it("GET /api/v1/users/me Successful get current authenticated user details", async () => {
+    const res = await request(app)
+      .get(`/api/v1/users/me`)
+      .set("Authorization", `Bearer ${adminToken}`);
+    expect(res.statusCode).toBe(200);
+    expect(res.body.status).toBe("success");
+    expect(res.body.data.email).toBe("admintest@mail.com");
+    expect(res.body.data._id).toBe("6801100a0ba9cf7e265a72a1");
+  }, 10000);
+
+  it("GET /api/v1/users/me Lack of token unauthorized to access the current authenticated user", async () => {
+    const res = await request(app).get(`/api/v1/users/me`);
+    expect(res.statusCode).toBe(401);
+    expect(res.body.status).toBe("fail");
+    expect(res.body.message).toBe("Access denied. No token provided");
+  }, 10000);
+
+  it("GET /api/v1/users/me Fail Invalid Token unauthorized to access the current authenticated user", async () => {
+    const res = await request(app)
+      .get(`/api/v1/users/me`)
+      .set("Authorization", `Bearer invalidToken`);
+    expect(res.statusCode).toBe(403);
+    expect(res.body.status).toBe("fail");
+    expect(res.body.message).toBe("jwt malformed");
+  }, 10000);
+});
+
+describe("PATCH /api/v1/users/me", () => {
+  it("PATCH /api/v1/users/me Successful current authenticated user update specific fields", async () => {
+    const res = await request(app)
+      .patch(`/api/v1/users/me`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        firstname: "Nikolas",
+        lastname: "Theofanis",
+      });
+    expect(res.statusCode).toBe(200);
+    expect(res.body.status).toBe("success");
+    expect(res.body.data._id).toBe("6801100a0ba9cf7e265a72a1");
+    expect(res.body.data.email).toBe("admintest@mail.com");
+    expect(res.body.data.firstname).toBe("Nikolas");
+    expect(res.body.data.lastname).toBe("Theofanis");
+  }, 10000);
+
+  it("PATCH /api/v1/users/{id} Lack of token unauthorized to update the current authenticated user", async () => {
+    const res = await request(app).patch(`/api/v1/users/me`).send({
+      firstname: "admin",
+    });
+    expect(res.statusCode).toBe(401);
+    expect(res.body.status).toBe("fail");
+    expect(res.body.message).toBe("Access denied. No token provided");
+  }, 10000);
+
+  it("PATCH /api/v1/users/{id} Fail Invalid Token unauthorized to update the current authenticated user", async () => {
+    const res = await request(app)
+      .patch(`/api/v1/users/me`)
+      .set("Authorization", `Bearer invalidToken`)
+      .send({
+        firstname: "admin",
+      });
+    expect(res.statusCode).toBe(403);
+    expect(res.body.status).toBe("fail");
+    expect(res.body.message).toBe("jwt malformed");
+  }, 10000);
+});
+
+describe("DELETE /api/v1/users/me", () => {
+  afterAll(async () => {
+    await request(app)
+      .patch(`/api/v1/users/6801100a0ba9cf7e265a72a1`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        isActive: true,
+      });
+  });
+
+  it("DELETE /api/v1/users/me Successful soft delete of current authenticated user", async () => {
+    const res = await request(app)
+      .delete(`/api/v1/users/me`)
+      .set("Authorization", `Bearer ${adminToken}`);
+    expect(res.statusCode).toBe(200);
+    expect(res.body.status).toBe("success");
+    expect(res.body.data.isActive).toBeFalsy();
+  }, 10000);
+
+  it("DELETE /api/v1/users/me Lack of token unauthorized to soft delete the current authenticated user", async () => {
+    const res = await request(app).delete(`/api/v1/users/me`);
+    expect(res.statusCode).toBe(401);
+    expect(res.body.status).toBe("fail");
+    expect(res.body.message).toBe("Access denied. No token provided");
+  }, 10000);
+
+  it("DELETE /api/v1/users/me Fail Invalid Token unauthorized to soft delete the current authenticated user", async () => {
+    const res = await request(app)
+      .delete(`/api/v1/users/me`)
+      .set("Authorization", `Bearer invalidToken`);
+    expect(res.statusCode).toBe(403);
+    expect(res.body.status).toBe("fail");
+    expect(res.body.message).toBe("jwt malformed");
+  }, 10000);
+});
+
+describe("PATCH /api/v1/users/me/change-password", () => {
+  it("PATCH /api/v1/users/me/change-password Successfully changes password with valid currentPassword and matching newPassword/confirmPassword", async () => {
+    const res = await request(app)
+      .patch(`/api/v1/users/me/change-password`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        currentPassword: "12345",
+        newPassword: "12345!",
+        newPasswordConfirm: "12345!",
+      });
+    expect(res.statusCode).toBe(200);
+    expect(res.body.status).toBe("success");
+    expect(res.body.data.email).toBe("admintest@mail.com");
+    // Reset state
+    await request(app)
+      .patch(`/api/v1/users/me/change-password`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        currentPassword: "12345!",
+        newPassword: "12345",
+        newPasswordConfirm: "12345",
+      });
+  }, 10000);
+
+  it("PATCH /api/v1/users/me/change-password Fails with incorrect currentPassword", async () => {
+    const res = await request(app)
+      .patch(`/api/v1/users/me/change-password`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        currentPassword: "WrongPass!",
+        newPassword: "NewPass",
+        newPasswordConfirm: "NewPass",
+      });
+    expect(res.statusCode).toBe(401);
+    expect(res.body.status).toBe("fail");
+    expect(res.body.message).toBe("Unauthorized! Wrong current password");
+  }, 10000);
+
+  it("PATCH /api/v1/users/me/change-password Fails when newPassword and confirmPassword do not match", async () => {
+    const res = await request(app)
+      .patch(`/api/v1/users/me/change-password`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        currentPassword: "12345",
+        newPassword: "NewPass123!",
+        newPasswordConfirm: "Mismatch123!",
+      });
+    expect(res.statusCode).toBe(400);
+    expect(res.body.status).toBe("fail");
+    expect(res.body.message).toBe(
+      "New password and new password confirm must be the same"
+    );
+  }, 10000);
+
+  it("PATCH /api/v1/users/me/change-password Fails when the request body doesnt contains all the info", async () => {
+    const res = await request(app)
+      .patch(`/api/v1/users/me/change-password`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({});
+    expect(res.statusCode).toBe(400);
+    expect(res.body.status).toBe("fail");
+    expect(res.body.message).toBe(
+      "You should provide current password, new password and new password confirm"
+    );
+  }, 10000);
+
+  it("PATCH /api/v1/users/me/change-password Fails when no token is provided", async () => {
+    const res = await request(app)
+      .patch(`/api/v1/users/me/change-password`)
+      .send({
+        currentPassword: "12345",
+        newPassword: "NewPass123!",
+        newPasswordConfirm: "NewPass123!",
+      });
+    expect(res.statusCode).toBe(401);
+    expect(res.body.status).toBe("fail");
+    expect(res.body.message).toBe("Access denied. No token provided");
+  }, 10000);
+
+  it("PATCH /api/v1/users/me/change-password Fails when invalid token is provided", async () => {
+    const res = await request(app)
+      .patch(`/api/v1/users/me/change-password`)
+      .set("Authorization", `Bearer invalidToken`)
+      .send({
+        currentPassword: "12345",
+        newPassword: "NewPass123!",
+        newPasswordConfirm: "NewPass123!",
+      });
+    expect(res.statusCode).toBe(403);
+    expect(res.body.status).toBe("fail");
+    expect(res.body.message).toBe("jwt malformed");
+  }, 10000);
+
+  it("PATCH /api/v1/users/me/change-password Should fail if user logged in with Google", async () => {
+    const googleUserToken = authService.generateAccessToken({
+      _id: "6807565b035bf547ba9cd373",
+      email: "googletest@mail.com",
+      roles: ["READER"],
+    });
+    const res = await request(app)
+      .patch("/api/v1/users/me/change-password")
+      .set("Authorization", `Bearer ${googleUserToken}`)
+      .send({
+        currentPassword: "Password",
+        newPassword: "NewPass123!",
+        newPasswordConfirm: "NewPass123!",
+      });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.message).toBe(
+      "You use a google account for login. You cannot change your password from this route"
+    );
+  });
+});

@@ -36,15 +36,34 @@ const mongodbProdLogsTransport = new winston.transports.MongoDB({
   ),
 });
 
+const mongodbTestingLogsTransport = new winston.transports.MongoDB({
+  level: "info",
+  db: process.env.MONGODB_URI_TEST,
+  collection: "production_server_logs",
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.json()
+  ),
+});
+
 if (process.env.NODE_ENV === "development") {
   logger.add(new winston.transports.Console());
   logger.add(mongodbDevLogsTransport);
-} else if (process.env.NODE_ENV === "production") {
-  logger.add(
-    new winston.transports.File({ filename: "logs/error.log", level: "error" })
-  );
-  logger.add(fileRotateTransport);
-  logger.add(mongodbProdLogsTransport);
+}
+
+if (process.env.NODE_ENV === "production") {
+  if (process.env.TESTING === "truthy") {
+    logger.add(mongodbTestingLogsTransport);
+  } else {
+    logger.add(
+      new winston.transports.File({
+        filename: "logs/error.log",
+        level: "error",
+      })
+    );
+    logger.add(fileRotateTransport);
+    logger.add(mongodbProdLogsTransport);
+  }
 }
 
 module.exports = logger;

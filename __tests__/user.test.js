@@ -3,10 +3,11 @@ const request = require("supertest");
 const app = require("../app");
 const authService = require("../services/auth.services");
 const userService = require("../services/user.services");
+const secUtil = require("../utils/secUtil");
 
 // Connecting to Mongo DB before starting all tests
 beforeAll(async () => {
-  await mongoose.connect(process.env.MONGODB_URI).then(
+  await mongoose.connect(process.env.MONGODB_URI_TEST).then(
     () => {
       console.log("Connection to MongoDB established for Jest");
     },
@@ -14,27 +15,58 @@ beforeAll(async () => {
       console.log("Failed to connect to MongoDB for Jest", err);
     }
   );
-  const admin = {
-    _id: "6801100a0ba9cf7e265a72a1",
+
+  const hashedPassword = await secUtil.generateHashPassword("12345");
+
+  admin = await userService.createOne({
     email: "admintest@mail.com",
+    password: hashedPassword,
     roles: ["ADMIN"],
-  };
-  const editor = {
-    _id: "6801100a0ba9cf7e265a72a1",
+  });
+  editor = await userService.createOne({
     email: "editortest@mail.com",
+    password: hashedPassword,
     roles: ["EDITOR"],
-  };
-  const reader = {
-    _id: "6801100a0ba9cf7e265a72a1",
+  });
+  reader = await userService.createOne({
     email: "readertest@mail.com",
+    password: hashedPassword,
     roles: ["READER"],
-  };
-  adminToken = authService.generateAccessToken(admin);
-  editorToken = authService.generateAccessToken(editor);
-  readerToken = authService.generateAccessToken(reader);
+  });
+
+  googleTest = await userService.createOne({
+    email: "googletest@mail.com",
+    roles: ["ADMIN", "READER"],
+    authProvider: "google",
+  });
+
+  adminToken = authService.generateAccessToken({
+    _id: admin._id,
+    email: admin.email,
+    roles: admin.roles,
+  });
+  editorToken = authService.generateAccessToken({
+    _id: editor._id,
+    email: editor.email,
+    roles: editor.roles,
+  });
+  readerToken = authService.generateAccessToken({
+    _id: reader._id,
+    email: reader.email,
+    roles: reader.roles,
+  });
+  googleToken = authService.generateAccessToken({
+    _id: googleTest._id,
+    email: googleTest.email,
+    roles: googleTest.roles,
+  });
 });
 
 afterAll(async () => {
+  await userService.deleteOneById(admin._id);
+  await userService.deleteOneById(editor._id);
+  await userService.deleteOneById(reader._id);
+  await userService.deleteOneById(googleTest._id);
   await mongoose.connection.close();
 });
 
@@ -417,7 +449,6 @@ describe("GET /api/v1/users/me", () => {
     expect(res.statusCode).toBe(200);
     expect(res.body.status).toBe("success");
     expect(res.body.data.email).toBe("admintest@mail.com");
-    expect(res.body.data._id).toBe("6801100a0ba9cf7e265a72a1");
   }, 10000);
 
   it("GET /api/v1/users/me Lack of token unauthorized to access the current authenticated user", async () => {
@@ -448,7 +479,6 @@ describe("PATCH /api/v1/users/me", () => {
       });
     expect(res.statusCode).toBe(200);
     expect(res.body.status).toBe("success");
-    expect(res.body.data._id).toBe("6801100a0ba9cf7e265a72a1");
     expect(res.body.data.email).toBe("admintest@mail.com");
     expect(res.body.data.firstname).toBe("Nikolas");
     expect(res.body.data.lastname).toBe("Theofanis");
@@ -479,7 +509,7 @@ describe("PATCH /api/v1/users/me", () => {
 describe("DELETE /api/v1/users/me", () => {
   afterAll(async () => {
     await request(app)
-      .patch(`/api/v1/users/6801100a0ba9cf7e265a72a1`)
+      .patch(`/api/v1/users/${googleTest._id}`)
       .set("Authorization", `Bearer ${adminToken}`)
       .send({
         isActive: true,
@@ -606,14 +636,9 @@ describe("PATCH /api/v1/users/me/change-password", () => {
   }, 10000);
 
   it("PATCH /api/v1/users/me/change-password Should fail if user logged in with Google", async () => {
-    const googleUserToken = authService.generateAccessToken({
-      _id: "6807565b035bf547ba9cd373",
-      email: "googletest@mail.com",
-      roles: ["READER"],
-    });
     const res = await request(app)
       .patch("/api/v1/users/me/change-password")
-      .set("Authorization", `Bearer ${googleUserToken}`)
+      .set("Authorization", `Bearer ${googleToken}`)
       .send({
         currentPassword: "Password",
         newPassword: "NewPass123!",

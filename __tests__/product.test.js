@@ -1,12 +1,14 @@
 const mongoose = require("mongoose");
 const request = require("supertest");
 const authService = require("../services/auth.services");
+const userService = require("../services/user.services");
 const productService = require("../services/product.services");
 const app = require("../app");
+const secUtil = require("../utils/secUtil");
 
 // Connecting to Mongo DB before starting all tests
 beforeAll(async () => {
-  await mongoose.connect(process.env.MONGODB_URI).then(
+  await mongoose.connect(process.env.MONGODB_URI_TEST).then(
     () => {
       console.log("Connection to MongoDB established for Jest");
     },
@@ -14,27 +16,45 @@ beforeAll(async () => {
       console.log("Failed to connect to MongoDB for Jest", err);
     }
   );
-  const admin = {
-    _id: "6801100a0ba9cf7e265a72a1",
+  const hashedPassword = await secUtil.generateHashPassword("12345");
+
+  admin = await userService.createOne({
     email: "admintest@mail.com",
+    password: hashedPassword,
     roles: ["ADMIN"],
-  };
-  const editor = {
-    _id: "6801100a0ba9cf7e265a72a1",
+  });
+  editor = await userService.createOne({
     email: "editortest@mail.com",
+    password: hashedPassword,
     roles: ["EDITOR"],
-  };
-  const reader = {
-    _id: "6801100a0ba9cf7e265a72a1",
+  });
+  reader = await userService.createOne({
     email: "readertest@mail.com",
+    password: hashedPassword,
     roles: ["READER"],
-  };
-  adminToken = authService.generateAccessToken(admin);
-  editorToken = authService.generateAccessToken(editor);
-  readerToken = authService.generateAccessToken(reader);
+  });
+
+  adminToken = authService.generateAccessToken({
+    _id: admin._id,
+    email: admin.email,
+    roles: admin.roles,
+  });
+  editorToken = authService.generateAccessToken({
+    _id: editor._id,
+    email: editor.email,
+    roles: editor.roles,
+  });
+  readerToken = authService.generateAccessToken({
+    _id: reader._id,
+    email: reader.email,
+    roles: reader.roles,
+  });
 });
 
 afterAll(async () => {
+  await userService.deleteOneById(admin._id);
+  await userService.deleteOneById(editor._id);
+  await userService.deleteOneById(reader._id);
   await mongoose.connection.close();
 });
 
@@ -44,7 +64,6 @@ describe("GET /api/v1/products", () => {
     expect(res.statusCode).toBe(200);
     expect(res.body.status).toBe("success");
     expect(Array.isArray(res.body.data)).toBe(true);
-    expect(res.body.data.length).toBeGreaterThan(0);
   });
 });
 

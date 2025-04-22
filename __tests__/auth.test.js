@@ -5,7 +5,7 @@ const authService = require("../services/auth.services");
 const userService = require("../services/user.services");
 
 beforeAll(async () => {
-  await mongoose.connect(process.env.MONGODB_URI).then(
+  await mongoose.connect(process.env.MONGODB_URI_TEST).then(
     () => {
       console.log("Connection to MongoDB established for Jest");
     },

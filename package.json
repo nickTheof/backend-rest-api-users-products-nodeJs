@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "SET NODE_ENV=production&& jest --detectOpenHandles --forceExit",
+    "test": "SET NODE_ENV=production&& SET TESTING=truthy&& jest --detectOpenHandles --forceExit",
     "start": "SET NODE_ENV=production&& node server.js",
     "dev": "node --watch server.js"
   },

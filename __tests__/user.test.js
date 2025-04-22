@@ -3,7 +3,6 @@ const request = require("supertest");
 const app = require("../app");
 const authService = require("../services/auth.services");
 const userService = require("../services/user.services");
-require("dotenv").config();
 
 // Connecting to Mongo DB before starting all tests
 beforeAll(async () => {

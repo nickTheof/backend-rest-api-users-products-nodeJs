@@ -15,7 +15,7 @@ exports.login = catchAsync(async (req, res, next) => {
   } else {
     res.status(401).json({
       status: "fail",
-      data: response.data,
+      message: response.data,
     });
   }
 });

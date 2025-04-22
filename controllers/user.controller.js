@@ -68,15 +68,16 @@ exports.signupLocalUser = catchAsync(async (req, res, next) => {
   if (!email || !password || !confirmPassword) {
     return next(
       new ApiError(
-        "Invalid input. You should send email, password, and password confirmation"
-      ),
-      400
+        "Invalid input. You should send email, password, and password confirmation",
+        400
+      )
     );
   }
   if (password !== confirmPassword) {
     return next(
       new ApiError(
-        "Invalid input. Password and password confirmation should be equal"
+        "Invalid input. Password and password confirmation should be equal",
+        400
       )
     );
   }

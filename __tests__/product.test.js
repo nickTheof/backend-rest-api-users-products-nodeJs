@@ -139,6 +139,52 @@ describe("POST /api/v1/products", () => {
     expect(res.body.status).toBe("fail");
     expect(res.body.message).toContain("Invalid input data");
   });
+
+  it("POST /api/v1/products Lack of token unauthorized to create the resource", async () => {
+    const res = await request(app)
+      .post("/api/v1/products")
+      .send({
+        product: "TEST",
+        price: 50,
+        quantity: 50,
+        category: ["electronics"],
+      });
+    expect(res.statusCode).toBe(401);
+    expect(res.body.status).toBe("fail");
+    expect(res.body.message).toBe("Access denied. No token provided");
+  }, 10000);
+
+  it("POST /api/v1/products Fail Invalid Token unauthorized to create the resource", async () => {
+    const res = await request(app)
+      .post("/api/v1/products")
+      .set("Authorization", `Bearer invalidToken`)
+      .send({
+        product: "TEST",
+        price: 50,
+        quantity: 50,
+        category: ["electronics"],
+      });
+    expect(res.statusCode).toBe(403);
+    expect(res.body.status).toBe("fail");
+    expect(res.body.message).toBe("jwt malformed");
+  }, 10000);
+
+  it("POST /api/v1/products Fail Invalid Token unauthorized to create the resource", async () => {
+    const jwtExpired =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2ODAxMTAwYTBiYTljZjdlMjY1YTcyYTEiLCJlbWFpbCI6ImFkbWludGVzdEBtYWlsLmNvbSIsInJvbGVzIjpbIkFETUlOIl0sImlhdCI6MTc0NTMzNDg3MSwiZXhwIjoxNzQ1MzM4NDcxfQ.WKhyBgM0arGMFg5gethbQOCb535hfi4KG88vCxJackw";
+    const res = await request(app)
+      .post("/api/v1/products")
+      .set("Authorization", `Bearer ${jwtExpired}`)
+      .send({
+        product: "TEST",
+        price: 50,
+        quantity: 50,
+        category: ["electronics"],
+      });
+    expect(res.statusCode).toBe(403);
+    expect(res.body.status).toBe("fail");
+    expect(res.body.message).toBe("jwt expired");
+  }, 10000);
 });
 
 describe("GET /api/v1/products/{id}", () => {
@@ -289,6 +335,20 @@ describe("PATCH /api/v1/products/{id}", () => {
     expect(res.body.message).toBe("jwt malformed");
   }, 10000);
 
+  it("PATCH /api/v1/products/{id} Fail Token expired unauthorized to modify the resource", async () => {
+    const jwtExpired =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2ODAxMTAwYTBiYTljZjdlMjY1YTcyYTEiLCJlbWFpbCI6ImFkbWludGVzdEBtYWlsLmNvbSIsInJvbGVzIjpbIkFETUlOIl0sImlhdCI6MTc0NTMzNDg3MSwiZXhwIjoxNzQ1MzM4NDcxfQ.WKhyBgM0arGMFg5gethbQOCb535hfi4KG88vCxJackw";
+    const res = await request(app)
+      .patch(`/api/v1/products/${productAdminCreated._id}`)
+      .set("Authorization", `Bearer ${jwtExpired}`)
+      .send({
+        cost: 150,
+      });
+    expect(res.statusCode).toBe(403);
+    expect(res.body.status).toBe("fail");
+    expect(res.body.message).toBe("jwt expired");
+  }, 10000);
+
   it("PATCH /api/v1/products/{id} Fail Reader unauthorized to modify the resource", async () => {
     const res = await request(app)
       .patch(`/api/v1/products/${productAdminCreated._id}`)
@@ -364,6 +424,17 @@ describe("DELETE /api/v1/products/{id}", () => {
     expect(res.statusCode).toBe(403);
     expect(res.body.status).toBe("fail");
     expect(res.body.message).toBe("jwt malformed");
+  }, 10000);
+
+  it("DELETE /api/v1/products/{id} Fail Token expired unauthorized to delete the resource", async () => {
+    const jwtExpired =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2ODAxMTAwYTBiYTljZjdlMjY1YTcyYTEiLCJlbWFpbCI6ImFkbWludGVzdEBtYWlsLmNvbSIsInJvbGVzIjpbIkFETUlOIl0sImlhdCI6MTc0NTMzNDg3MSwiZXhwIjoxNzQ1MzM4NDcxfQ.WKhyBgM0arGMFg5gethbQOCb535hfi4KG88vCxJackw";
+    const res = await request(app)
+      .delete(`/api/v1/products/${productEditorCreated._id}`)
+      .set("Authorization", `Bearer ${jwtExpired}`);
+    expect(res.statusCode).toBe(403);
+    expect(res.body.status).toBe("fail");
+    expect(res.body.message).toBe("jwt expired");
   }, 10000);
 
   it("DELETE /api/v1/products/{id} Fail Reader unauthorized to delete the resource", async () => {

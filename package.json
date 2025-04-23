@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "SET NODE_ENV=production&& SET TESTING=truthy&& jest --detectOpenHandles --forceExit",
-    "start": "SET NODE_ENV=production&& node server.js",
+    "test": "cross-env NODE_ENV=production TESTING=truthy jest --detectOpenHandles --forceExit",
+    "start": "cross-env NODE_ENV=production node server.js",
     "dev": "node --watch server.js"
   },
   "jest": {
@@ -40,6 +40,7 @@
     "winston-mongodb": "^6.0.0"
   },
   "devDependencies": {
+    "cross-env": "^7.0.3",
     "jest": "^29.7.0",
     "supertest": "^7.1.0"
   }

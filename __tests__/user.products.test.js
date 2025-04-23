@@ -452,6 +452,103 @@ describe("POST /api/v1/user-products/me", () => {
   });
 });
 
+describe("PATCH /api/v1/user-products/me", () => {
+  it("PATCH current authenticated user successful update qunatity of existent product", async () => {
+    const res = await request(app)
+      .patch(`/api/v1/user-products/me`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        productId: admin.products[0]._id,
+        quantity: 100,
+      });
+    expect(res.statusCode).toBe(200);
+    expect(res.body.status).toBe("success");
+    expect(Array.isArray(res.body.data.products)).toBeTruthy();
+    expect(res.body.data.products[0].quantity).toBe(100);
+    expect(res.body.data.products[0]._id).toEqual(
+      admin.products[0]._id.toString()
+    );
+  });
+
+  it("PATCH current authenticated user fails update qunatity of existent product due to negative quantity", async () => {
+    const res = await request(app)
+      .patch(`/api/v1/user-products/me`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        productId: admin.products[0]._id,
+        quantity: -100,
+      });
+    expect(res.statusCode).toBe(400);
+    expect(res.body.status).toBe("fail");
+    expect(res.body.message).toContain("Invalid input");
+  });
+
+  it("PATCH current authenticated user fails update quantity of not his own correct productId ", async () => {
+    const res = await request(app)
+      .patch(`/api/v1/user-products/me`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        productId: editor.products[0]._id,
+        quantity: 100,
+      });
+    expect(res.statusCode).toBe(404);
+    expect(res.body.status).toBe("fail");
+    expect(res.body.message).toContain("Product not found");
+  });
+
+  it("PATCH current authenticated user fails update quantity of not existent product", async () => {
+    const fakeId = new mongoose.Types.ObjectId();
+    const res = await request(app)
+      .patch(`/api/v1/user-products/me`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        productId: fakeId,
+        quantity: 100,
+      });
+    expect(res.statusCode).toBe(404);
+    expect(res.body.status).toBe("fail");
+    expect(res.body.message).toContain(`Product not found`);
+  });
+
+  it("PATCH Lack of token unauthorized to modify the resource ", async () => {
+    const res = await request(app).patch(`/api/v1/user-products/me`).send({
+      productId: admin.products[0]._id,
+      quantity: 100,
+    });
+    expect(res.statusCode).toBe(401);
+    expect(res.body.status).toBe("fail");
+    expect(res.body.message).toBe("Access denied. No token provided");
+  });
+
+  it("PATCH Invalid Token unauthorized to to modify the resource ", async () => {
+    const res = await request(app)
+      .patch(`/api/v1/user-products/me`)
+      .set("Authorization", `Bearer InvalidToken`)
+      .send({
+        productId: admin.products[0]._id,
+        quantity: 100,
+      });
+    expect(res.statusCode).toBe(403);
+    expect(res.body.status).toBe("fail");
+    expect(res.body.message).toBe("jwt malformed");
+  });
+
+  it("PATCH Token expired unauthorized to access the resource", async () => {
+    const jwtExpired =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2ODAxMTAwYTBiYTljZjdlMjY1YTcyYTEiLCJlbWFpbCI6ImFkbWludGVzdEBtYWlsLmNvbSIsInJvbGVzIjpbIkFETUlOIl0sImlhdCI6MTc0NTMzNDg3MSwiZXhwIjoxNzQ1MzM4NDcxfQ.WKhyBgM0arGMFg5gethbQOCb535hfi4KG88vCxJackw";
+    const res = await request(app)
+      .patch(`/api/v1/user-products/me`)
+      .set("Authorization", `Bearer ${jwtExpired}`)
+      .send({
+        productId: admin.products[0]._id,
+        quantity: 100,
+      });
+    expect(res.statusCode).toBe(403);
+    expect(res.body.status).toBe("fail");
+    expect(res.body.message).toBe("jwt expired");
+  });
+});
+
 describe("POST /api/v1/user-products/{userId}", () => {
   it("POST Admin successful insert a new product to a specific user", async () => {
     const res = await request(app)
@@ -608,6 +705,262 @@ describe("POST /api/v1/user-products/{userId}", () => {
           },
         ],
       });
+    expect(res.statusCode).toBe(403);
+    expect(res.body.status).toBe("fail");
+    expect(res.body.message).toBe("jwt expired");
+  });
+});
+
+describe("PATCH /api/v1/user-products/{userId}/products/{productId}", () => {
+  it("PATCH ADMIN successful update quantity of existent product", async () => {
+    const res = await request(app)
+      .patch(
+        `/api/v1/user-products/${editor._id}/products/${editor.products[0]._id}`
+      )
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        productId: editor.products[0]._id,
+        quantity: 200,
+      });
+    expect(res.statusCode).toBe(200);
+    expect(res.body.status).toBe("success");
+    expect(Array.isArray(res.body.data.products)).toBeTruthy();
+    expect(res.body.data.products[0].quantity).toBe(200);
+    expect(res.body.data.products[0]._id).toEqual(
+      editor.products[0]._id.toString()
+    );
+  });
+
+  it("PATCH Editor unauthorized to update quantity of existent product of another user", async () => {
+    const res = await request(app)
+      .patch(
+        `/api/v1/user-products/${reader._id}/products/${reader.products[0]._id}`
+      )
+      .set("Authorization", `Bearer ${editorToken}`)
+      .send({
+        productId: reader.products[0]._id,
+        quantity: 200,
+      });
+    expect(res.statusCode).toBe(403);
+    expect(res.body.status).toBe("fail");
+    expect(res.body.message).toBe("Forbidden: insufficient permissions");
+  });
+
+  it("PATCH Reader unauthorized to update quantity of existent product of another user", async () => {
+    const res = await request(app)
+      .patch(
+        `/api/v1/user-products/${editor._id}/products/${editor.products[0]._id}`
+      )
+      .set("Authorization", `Bearer ${readerToken}`)
+      .send({
+        productId: editor.products[0]._id,
+        quantity: 200,
+      });
+    expect(res.statusCode).toBe(403);
+    expect(res.body.status).toBe("fail");
+    expect(res.body.message).toBe("Forbidden: insufficient permissions");
+  });
+
+  it("PATCH ADMIN fails update quantity of existent product due to negative quantity", async () => {
+    const res = await request(app)
+      .patch(
+        `/api/v1/user-products/${editor._id}/products/${editor.products[0]._id}`
+      )
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        productId: editor.products[0]._id,
+        quantity: -100,
+      });
+    expect(res.statusCode).toBe(400);
+    expect(res.body.status).toBe("fail");
+    expect(res.body.message).toContain("Invalid input");
+  });
+
+  it("PATCH ADMIN fails update quantity of existent product due to user not own this correct product id", async () => {
+    const res = await request(app)
+      .patch(
+        `/api/v1/user-products/${editor._id}/products/${reader.products[0]._id}`
+      )
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        productId: reader.products[0]._id,
+        quantity: 100,
+      });
+    expect(res.statusCode).toBe(404);
+    expect(res.body.status).toBe("fail");
+    expect(res.body.message).toContain("Product not found");
+  });
+
+  it("PATCH ADMIN fails update quantity of a product that not exists", async () => {
+    const fakeId = new mongoose.Types.ObjectId();
+    const res = await request(app)
+      .patch(`/api/v1/user-products/${editor._id}/products/${fakeId}`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        productId: fakeId,
+        quantity: 100,
+      });
+    expect(res.statusCode).toBe(404);
+    expect(res.body.status).toBe("fail");
+    expect(res.body.message).toContain("Product not found");
+  });
+
+  it("PATCH Lack of token unauthorized to modify the resource ", async () => {
+    const res = await request(app)
+      .patch(
+        `/api/v1/user-products/${editor._id}/products/${editor.products[0]._id}`
+      )
+      .send({
+        productId: editor.products[0]._id,
+        quantity: 200,
+      });
+    expect(res.statusCode).toBe(401);
+    expect(res.body.status).toBe("fail");
+    expect(res.body.message).toBe("Access denied. No token provided");
+  });
+
+  it("PATCH Invalid Token unauthorized to to modify the resource ", async () => {
+    const res = await request(app)
+      .patch(
+        `/api/v1/user-products/${editor._id}/products/${editor.products[0]._id}`
+      )
+      .set("Authorization", `Bearer invalidToken}`)
+      .send({
+        productId: editor.products[0]._id,
+        quantity: 200,
+      });
+    expect(res.statusCode).toBe(403);
+    expect(res.body.status).toBe("fail");
+    expect(res.body.message).toBe("jwt malformed");
+  });
+
+  it("PATCH Token expired unauthorized to modify the resource", async () => {
+    const jwtExpired =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2ODAxMTAwYTBiYTljZjdlMjY1YTcyYTEiLCJlbWFpbCI6ImFkbWludGVzdEBtYWlsLmNvbSIsInJvbGVzIjpbIkFETUlOIl0sImlhdCI6MTc0NTMzNDg3MSwiZXhwIjoxNzQ1MzM4NDcxfQ.WKhyBgM0arGMFg5gethbQOCb535hfi4KG88vCxJackw";
+    const res = await request(app)
+      .patch(
+        `/api/v1/user-products/${editor._id}/products/${editor.products[0]._id}`
+      )
+      .set("Authorization", `Bearer ${jwtExpired}`)
+      .send({
+        productId: editor.products[0]._id,
+        quantity: 200,
+      });
+    expect(res.statusCode).toBe(403);
+    expect(res.body.status).toBe("fail");
+    expect(res.body.message).toBe("jwt expired");
+  });
+});
+
+describe("DELETE /api/v1/user-products/{userId}/products/{productId}", () => {
+  it("DELETE ADMIN successful delete specific product of specific user", async () => {
+    const res = await request(app)
+      .delete(
+        `/api/v1/user-products/${editor._id}/products/${editor.products[0]._id}`
+      )
+      .set("Authorization", `Bearer ${adminToken}`);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.status).toBe("success");
+    expect(Array.isArray(res.body.data.products)).toBeTruthy();
+    expect(res.body.data.products[0]._id).not.toEqual(
+      editor.products[0]._id.toString()
+    );
+  });
+
+  it("DELETE Editor unauthorized to delete specific product of specific another user", async () => {
+    const res = await request(app)
+      .delete(
+        `/api/v1/user-products/${reader._id}/products/${reader.products[0]._id}`
+      )
+      .set("Authorization", `Bearer ${editorToken}`);
+    expect(res.statusCode).toBe(403);
+    expect(res.body.status).toBe("fail");
+    expect(res.body.message).toBe("Forbidden: insufficient permissions");
+  });
+
+  it("DELETE Reader unauthorized to delete specific product of specific another user", async () => {
+    const res = await request(app)
+      .delete(
+        `/api/v1/user-products/${editor._id}/products/${editor.products[0]._id}`
+      )
+      .set("Authorization", `Bearer ${readerToken}`);
+    expect(res.statusCode).toBe(403);
+    expect(res.body.status).toBe("fail");
+    expect(res.body.message).toBe("Forbidden: insufficient permissions");
+  });
+
+  it("DELETE ADMIN fails delete existent product due to user not own this correct product id", async () => {
+    const res = await request(app)
+      .delete(
+        `/api/v1/user-products/${editor._id}/products/${reader.products[0]._id}`
+      )
+      .set("Authorization", `Bearer ${adminToken}`);
+    expect(res.statusCode).toBe(404);
+    expect(res.body.status).toBe("fail");
+    expect(res.body.message).toContain("not found");
+  });
+
+  it("DELETE ADMIN fails delete existent product due to user not own this correct product id as user not exists", async () => {
+    const fakeId = new mongoose.Types.ObjectId();
+    const res = await request(app)
+      .delete(
+        `/api/v1/user-products/${fakeId}/products/${reader.products[0]._id}`
+      )
+      .set("Authorization", `Bearer ${adminToken}`);
+    expect(res.statusCode).toBe(404);
+    expect(res.body.status).toBe("fail");
+    expect(res.body.message).toContain("not found");
+  });
+
+  it("DELETE ADMIN fails delete product that not exists", async () => {
+    const fakeId = new mongoose.Types.ObjectId();
+    const res = await request(app)
+      .delete(`/api/v1/user-products/${editor._id}/products/${fakeId}`)
+      .set("Authorization", `Bearer ${adminToken}`);
+    expect(res.statusCode).toBe(404);
+    expect(res.body.status).toBe("fail");
+    expect(res.body.message).toContain("not found");
+  });
+
+  it("DELETE ADMIN fails delete product from user that not exists", async () => {
+    const fakeId = new mongoose.Types.ObjectId();
+    const res = await request(app)
+      .delete(`/api/v1/user-products/${fakeId}/products/${fakeId}`)
+      .set("Authorization", `Bearer ${adminToken}`);
+    expect(res.statusCode).toBe(404);
+    expect(res.body.status).toBe("fail");
+    expect(res.body.message).toContain("not found");
+  });
+
+  it("DELETE Lack of token unauthorized to delete the resource ", async () => {
+    const res = await request(app).delete(
+      `/api/v1/user-products/${editor._id}/products/${editor.products[0]._id}`
+    );
+    expect(res.statusCode).toBe(401);
+    expect(res.body.status).toBe("fail");
+    expect(res.body.message).toBe("Access denied. No token provided");
+  });
+
+  it("DELETE Invalid Token unauthorized to to delete the resource", async () => {
+    const res = await request(app)
+      .delete(
+        `/api/v1/user-products/${editor._id}/products/${editor.products[0]._id}`
+      )
+      .set("Authorization", `Bearer invalidToken}`);
+    expect(res.statusCode).toBe(403);
+    expect(res.body.status).toBe("fail");
+    expect(res.body.message).toBe("jwt malformed");
+  });
+
+  it("DELETE Token expired unauthorized to delete the resource", async () => {
+    const jwtExpired =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2ODAxMTAwYTBiYTljZjdlMjY1YTcyYTEiLCJlbWFpbCI6ImFkbWludGVzdEBtYWlsLmNvbSIsInJvbGVzIjpbIkFETUlOIl0sImlhdCI6MTc0NTMzNDg3MSwiZXhwIjoxNzQ1MzM4NDcxfQ.WKhyBgM0arGMFg5gethbQOCb535hfi4KG88vCxJackw";
+    const res = await request(app)
+      .delete(
+        `/api/v1/user-products/${editor._id}/products/${editor.products[0]._id}`
+      )
+      .set("Authorization", `Bearer ${jwtExpired}`);
     expect(res.statusCode).toBe(403);
     expect(res.body.status).toBe("fail");
     expect(res.body.message).toBe("jwt expired");

@@ -34,10 +34,13 @@ let productSchema = new Schema({
   },
   cost: {
     type: Number,
+    min: [0.01, "Cost must be at least 0.01"],
+    set: (v) => parseFloat(v.toFixed(2)),
   },
   quantity: {
     type: Number,
     required: true,
+    min: [0, "Quantity cannot be negative"],
   },
   date: {
     type: Date,

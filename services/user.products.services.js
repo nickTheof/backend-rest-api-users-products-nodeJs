@@ -57,7 +57,7 @@ async function insertNewProductToAUser(id, products) {
         products: products,
       },
     },
-    { new: true }
+    { new: true, runValidators: true }
   );
   if (!result)
     throw new ApiError("User not found to insert a new product", 404);
@@ -73,7 +73,7 @@ async function updateProductQuantity(userId, product_id, product_quantity) {
         "products.$.quantity": product_quantity,
       },
     },
-    { new: true }
+    { new: true, runValidators: true }
   );
   if (!result) throw new ApiError("Product not found to update", 404);
   logger.info("Product updated successfully", result._doc);

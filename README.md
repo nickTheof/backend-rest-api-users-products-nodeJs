@@ -81,7 +81,7 @@ npm run start
 - Google login: Frontend gets code → Calls /auth/google?code=... → Receives JWT
 - JWT is required in Authorization: Bearer <token> for protected routes
 
-2. ** 🔒 Roles & Permissions**
+2. **🔒 Roles & Permissions**
 
 | Role   | Access                                    |
 | ------ | ----------------------------------------- |
@@ -89,9 +89,7 @@ npm run start
 | EDITOR | Limited access, Manage products           |
 | READER | Limited access, Can manage own products   |
 
-3. ** 🛣️ API Endpoints **
-
-## 📡 API Endpoints
+3. **🛣️ API Endpoints**
 
 | Method | Endpoint                                            | Description                                     | Auth Required    |
 | ------ | --------------------------------------------------- | ----------------------------------------------- | ---------------- |
